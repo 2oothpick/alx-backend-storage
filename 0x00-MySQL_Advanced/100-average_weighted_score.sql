@@ -1,4 +1,4 @@
-- Task 100-average_weighted_score
+-- Task 100-average_weighted_score
 
 DROP PROCEDURE IF EXISTS ComputeAverageWeightedScoreForUser;
 DELIMITER //
