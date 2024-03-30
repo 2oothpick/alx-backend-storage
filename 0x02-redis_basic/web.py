@@ -19,8 +19,7 @@ def count_reqsts(method: Callable) -> Callable:
     @wraps(method)
     def wrapper(url):
         """
-        cache the result with
-        an expiration time of 10 seconds.
+        cache the result
         """
         _redis.incr("count:{}".format(url), 1)
         txt = "results:{}".format(url)
