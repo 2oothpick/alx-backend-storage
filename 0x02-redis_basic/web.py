@@ -2,40 +2,39 @@
 """
 web cache and tracker
 """
+from typing import Callable
 import requests
 import redis
 from functools import wraps
 
-store = redis.Redis()
+_redis = redis.Redis()
 
 
-def count_url_access(method):
+def count_reqsts(method: Callable) -> Callable:
     """
-    Decorator counting
-    the number of times
-    a URL is accessed
+    Counts the number of times
+    a URL was accessed
     """
 
     @wraps(method)
     def wrapper(url):
-        cached_key = "cached:" + url
-        cached_data = store.get(cached_key)
-        if cached_data:
-            return cached_data.decode("utf-8")
-
-        count_key = "count:" + url
-        html = method(url)
-
-        store.incr(count_key)
-        store.set(cached_key, html)
-        store.expire(cached_key, 10)
-        return html
+        """
+        cache the result with
+        an expiration time of 10 seconds.
+        """
+        _redis.incr("count:{}".format(url), 1)
+        txt = "results:{}".format(url)
+        r = _redis.get(txt)
+        if r:
+            return r.decode("utf-8")
+        r = method(url)
+        _redis.setex(txt, 10, r)
+        return r
 
     return wrapper
 
 
-@count_url_access
+@count_reqsts
 def get_page(url: str) -> str:
     """Returns HTML content of a url"""
-    res = requests.get(url)
-    return res.text
+    return requests.get(url).text
